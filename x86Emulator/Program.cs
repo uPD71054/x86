@@ -5,7 +5,7 @@ using System.IO;
  * 
  * x86Emulator
  * 自作エミュレータで学ぶx86アーキテクチャ掲載x86エミュレータのC#移植版
- * Chapter2.3
+ * Chapter3.2
  * 
  *********************************************************************** */
 
@@ -121,6 +121,10 @@ namespace x86Emulator
             return ret;
         }
 
+        public Int32 getSignedCode32(int index)
+        {
+            return (Int32)getCode32(index);
+        }
 
 
         void mov_r32_imm32()
@@ -137,6 +141,12 @@ namespace x86Emulator
             eip += (UInt32)(diff + 2);
         }
 
+        void near_jump()
+        {
+            SByte diff = (SByte)getSignedCode8(1);
+            eip += (UInt32)(diff + 5);
+        }
+
 
 
         public delegate void Instruction();
@@ -149,6 +159,7 @@ namespace x86Emulator
                 instructions[0xB8 + i] = mov_r32_imm32;
             }
             instructions[0xEB] = short_jump;
+            instructions[0xE9] = near_jump;
         }
 
     }
