@@ -22,36 +22,16 @@ namespace x86Emulator
                 return;
             }
 
-
-
             Emulator emu = new Emulator(1024 * 1024, 0x0000, 0x7c00);
-            // ファイルオープン
-            using (var fs = new FileStream(args[0], FileMode.Open, FileAccess.Read))
-            {
-                fs.Read(emu.memory, 0, emu.memory.Length);
-            }
+            
+            // バイナリファイルをメモリ展開
+            if (emu.allocate(args[0], 0) != 0) return;                       
 
-            emu.initInstructions();
-
-            uint code;
             while (emu.eip < 1024*1024)
             {
-                code = emu.getCode8(0);
-                Console.WriteLine("EIP = 0x{0:X8}, Code = 0x{1:X2}", emu.eip, code);
-
-                if (emu.instructions[code] == null)
-                {
-                    Console.WriteLine("\n\nNot Implemented: {0:X2}", code);
-                    break;
-                }
-
-                emu.instructions[code]();
-
-                if (emu.eip == 0x00)
-                {
-                    Console.WriteLine("\n\nend of program.\n\n");
-                    break;
-                }
+                emu.fetch();
+                if (emu.decode() != 0) break; 
+                if (emu.execute() != 0) break;
             }
 
             emu.dumpRegisters();
@@ -68,7 +48,7 @@ namespace x86Emulator
         {
             EAX, ECX, EDX, EBX, ESP, EBP, ESI, EDI
         }
-
+        private uint code;
 
         // 汎用レジスタ
         public UInt32[] registers = new UInt32[Enum.GetNames(typeof(Register)).Length];
@@ -89,7 +69,53 @@ namespace x86Emulator
             }
 
             this.eip = eip;
-            this.registers[(int)Register.ESP] = esp;
+            registers[(int)Register.ESP] = esp;
+
+            initInstructions();
+        }
+
+        public void fetch()
+        {
+            code = getCode8(0);
+            Console.WriteLine("EIP = 0x{0:X8}, Code = 0x{1:X2}", eip, code);
+        }
+
+        public int decode()
+        {
+            if (instructions[code] == null)
+            {
+                Console.WriteLine("\n\nNot Implemented: {0:X2}", code);
+                return -1;
+            }
+            return 0;
+        }
+
+        public int execute()
+        {
+            instructions[code]();
+            if (eip == 0x00)
+            {
+                Console.WriteLine("\n\nend of program.\n\n");
+                return -1;
+            }
+            return 0;
+        }
+
+        public int allocate(string path, int offset = 0)
+        {
+            try
+            {
+                using (var fs = new FileStream(path, FileMode.Open, FileAccess.Read))
+                {
+                    fs.Read(memory, offset, 0x200);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("File Cannot Open.");
+                return -1;
+            }
+            return 0;
         }
 
         public void dumpRegisters()
@@ -101,17 +127,19 @@ namespace x86Emulator
             Console.WriteLine("EIP = 0x{0:X8}", eip);
         }
 
-        public UInt32 getCode8(int index)
+
+
+        private UInt32 getCode8(int index)
         {
             return memory[eip + index];
         }
 
-        public Int32 getSignedCode8(int index)
+        private Int32 getSignedCode8(int index)
         {
             return memory[eip + index];
         }
 
-        public UInt32 getCode32(int index)
+        private UInt32 getCode32(int index)
         {
             UInt32 ret = 0;
             for (int i = 0; i < 4; i++)
@@ -121,13 +149,13 @@ namespace x86Emulator
             return ret;
         }
 
-        public Int32 getSignedCode32(int index)
+        private Int32 getSignedCode32(int index)
         {
             return (Int32)getCode32(index);
         }
 
 
-        void mov_r32_imm32()
+        private void mov_r32_imm32()
         {
             Byte reg = (Byte)(getCode8(0) - 0xB8);
             UInt32 value = getCode32(1);
@@ -135,13 +163,13 @@ namespace x86Emulator
             eip += 5;
         }
 
-        void short_jump()
+        private void short_jump()
         {
             SByte diff = (SByte)getSignedCode8(1);
             eip += (UInt32)(diff + 2);
         }
 
-        void near_jump()
+        private void near_jump()
         {
             SByte diff = (SByte)getSignedCode8(1);
             eip += (UInt32)(diff + 5);
@@ -149,10 +177,10 @@ namespace x86Emulator
 
 
 
-        public delegate void Instruction();
-        public Instruction[] instructions = new Instruction[256];
+        private delegate void Instruction();
+        private Instruction[] instructions = new Instruction[256];
 
-        public void initInstructions()
+        private void initInstructions()
         {
             for (int i = 0; i < 8; i++)
             {
