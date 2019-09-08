@@ -13,6 +13,7 @@ namespace x86Emulator
         const UInt32 MEMORY_SIZE = 1024 * 1024;
 
         private uint code;
+        private Instruction[] instructions;
 
         // 汎用レジスタ
         public UInt32[] registers = new UInt32[Enum.GetNames(typeof(Registers)).Length];
@@ -23,7 +24,6 @@ namespace x86Emulator
 
         public Byte[] memory;
 
-        public static Instruction[] ins;
 
         public Emulator(UInt64 size, UInt32 eip, UInt32 esp)
         {
@@ -35,19 +35,22 @@ namespace x86Emulator
             registers[(int)Registers.ESP] = esp;
 
             memory = new Byte[size];
+
+            instructions = new Instruction[256]; 
+            Instructions.Initialize(instructions);
         }
 
 
-        public void fetch()
+        public void Fetch()
         {
             code = getCode8(0);
             Console.WriteLine("EIP = 0x{0:X8}, Code = 0x{1:X2}", eip, code);
         }
 
 
-        public int decode()
+        public int Decode()
         {
-            if (Instructions.instructions[code] == null)
+            if (instructions[code] == null)
             {
                 Console.WriteLine("\n\nNot Implemented: {0:X2}", code);
                 return -1;
@@ -56,9 +59,9 @@ namespace x86Emulator
         }
 
 
-        public int execute()
+        public int Execute()
         {
-            Instructions.instructions[code](this);
+            instructions[code](this);
             if (eip == 0x00)
             {
                 Console.WriteLine("\n\nend of program.\n\n");
@@ -68,7 +71,7 @@ namespace x86Emulator
         }
 
 
-        public int allocate(string path, int offset = 0)
+        public int Allocate(string path, int offset = 0)
         {
             try
             {
@@ -86,7 +89,7 @@ namespace x86Emulator
         }
 
 
-        public void dumpRegisters()
+        public void DumpRegisters()
         {
             for (int i = 0; i < Enum.GetNames(typeof(Registers)).Length; i++)
             {

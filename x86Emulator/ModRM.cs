@@ -138,6 +138,5 @@ namespace x86Emulator
             return emu.getRegister32(regIndex);
         }
 
-
     }
 }
