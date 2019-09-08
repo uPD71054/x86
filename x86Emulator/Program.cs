@@ -25,7 +25,7 @@ namespace x86Emulator
             Emulator emu = new Emulator(1024 * 1024, 0x0000, 0x7c00);
             
             // バイナリファイルをメモリ展開
-            if (emu.memory.allocate(args[0], 0) != 0) return;                       
+            if (emu.allocate(args[0], 0) != 0) return;                       
 
             while (true)
             {
@@ -34,7 +34,7 @@ namespace x86Emulator
                 if (emu.execute() != 0) break;
             }
 
-            emu.register.dumpRegisters();
+            emu.dumpRegisters();
             return;
         }
     }

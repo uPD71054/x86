@@ -26,29 +26,29 @@ namespace x86Emulator
             disp32 = disp8 = 0;
 
             Byte code;
-            code = (Byte)emu.memory.getCode8(emu.register.eip, 0);
+            code = (Byte)emu.getCode8(0);
 
             mod = (Byte)((code & 0xC0) >> 6);
             opcode = regIndex = (Byte)((code & 0x38) >> 3);
             rm = (Byte)(code & 0x07);
 
-            emu.register.eip++;
+            emu.eip++;
 
             if (mod != 0x03 && rm == 0x04)
             {
-                sib = (Byte)emu.memory.getCode8(emu.register.eip, 0);
-                emu.register.eip++;
+                sib = (Byte)emu.getCode8(0);
+                emu.eip++;
             }
 
             if ((mod == 0x00 && rm == 0x05) || mod == 0x02)
             {
-                disp32 = emu.memory.getCode32(emu.register.eip, 0);
-                emu.register.eip += 4;
+                disp32 = emu.getCode32(0);
+                emu.eip += 4;
             }
             else if (mod == 0x01)
             {
-                disp8 = (Byte)emu.memory.getCode8(emu.register.eip, 0);
-                emu.register.eip += 1;
+                disp8 = (Byte)emu.getCode8(0);
+                emu.eip += 1;
             }
         }
 
@@ -67,7 +67,7 @@ namespace x86Emulator
                 }
                 else
                 {
-                    return emu.register.getRegister32(rm);
+                    return emu.getRegister32(rm);
                 }
             }
             else if (mod == 0x01)
@@ -79,7 +79,7 @@ namespace x86Emulator
                 }
                 else
                 {
-                    return emu.register.getRegister32(rm) + disp8;
+                    return emu.getRegister32(rm) + disp8;
                 }
             }
             else if (mod == 0x02)
@@ -91,7 +91,7 @@ namespace x86Emulator
                 }
                 else
                 {
-                    return emu.register.getRegister32(rm) + disp32;
+                    return emu.getRegister32(rm) + disp32;
                 }
             }
             else
@@ -106,12 +106,12 @@ namespace x86Emulator
         {
             if (mod == 0x03)
             {
-                emu.register.setRegister32(rm, value);
+                emu.setRegister32(rm, value);
             }
             else
             {
                 UInt32 address = calc_memory_address(emu);
-                emu.memory.setMemory32(address, value);
+                emu.setMemory32(address, value);
             }
         }
 
@@ -119,23 +119,23 @@ namespace x86Emulator
         {
             if (mod == 0x03)
             {
-                return emu.register.getRegister32(rm);
+                return emu.getRegister32(rm);
             }
             else
             {
                 UInt32 address = calc_memory_address(emu);
-                return emu.memory.getMemory32(address);
+                return emu.getMemory32(address);
             }
         }
 
         public void set_r32(Emulator emu, UInt32 value)
         {
-            emu.register.setRegister32(regIndex, value);
+            emu.setRegister32(regIndex, value);
         }
 
         public UInt32 get_r32(Emulator emu)
         {
-            return emu.register.getRegister32(regIndex);
+            return emu.getRegister32(regIndex);
         }
 
 

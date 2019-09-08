@@ -35,35 +35,35 @@ namespace x86Emulator
 
         static void push_r32(Emulator emu)
         {
-            Byte reg = (Byte)(emu.memory.getCode8(emu.register.eip, 0) - 0x50);
-            emu.memory.push32(emu, emu.register.getRegister32(reg));
-            emu.register.eip += 1;
+            Byte reg = (Byte)(emu.getCode8(0) - 0x50);
+            emu.push32(emu.getRegister32(reg));
+            emu.eip += 1;
         }
 
         static void pop_r32(Emulator emu)
         {
-            Byte reg = (Byte)(emu.memory.getCode8(emu.register.eip, 0) - 0x58);
-            emu.register.setRegister32(reg, emu.memory.pop32(emu));
-            emu.register.eip += 1;
+            Byte reg = (Byte)(emu.getCode8(0) - 0x58);
+            emu.setRegister32(reg, emu.pop32());
+            emu.eip += 1;
         }
 
         static void call_rel32(Emulator emu)
         {
-            Int32 diff = emu.memory.getSignedCode32(emu.register.eip, 1);
-            emu.memory.push32(emu, emu.register.eip + 5);
-            emu.register.eip += (uint)(diff + 5);
+            Int32 diff = emu.getSignedCode32(1);
+            emu.push32(emu.eip + 5);
+            emu.eip += (uint)(diff + 5);
         }
 
         static void ret(Emulator emu)
         {
-            emu.register.eip = emu.memory.pop32(emu);
+            emu.eip = emu.pop32();
         }
 
 
         // opcode 0x01
         private static void add_rm32_r32(Emulator emu)
         {
-            emu.register.eip += 1;
+            emu.eip += 1;
             ModRM modrm = new ModRM();
             modrm.Parse(emu);
             UInt32 r32 = modrm.get_r32(emu);
@@ -76,7 +76,7 @@ namespace x86Emulator
         // opcode 0x83
         private static void code_83(Emulator emu)
         {
-            emu.register.eip += 1;
+            emu.eip += 1;
             ModRM modrm = new ModRM();
             modrm.Parse(emu);
 
@@ -95,8 +95,8 @@ namespace x86Emulator
         private static void sub_rm32_imm8(Emulator emu, ModRM modrm)
         {
             UInt32 rm32 = modrm.get_rm32(emu);
-            UInt32 imm8 = (UInt32)emu.memory.getSignedCode8(emu.register.eip, 0);
-            emu.register.eip += 1;
+            UInt32 imm8 = (UInt32)emu.getSignedCode8(0);
+            emu.eip += 1;
             modrm.set_rm32(emu, rm32 - imm8);
         }
 
@@ -105,7 +105,7 @@ namespace x86Emulator
         // opcode 0x89
         private static void mov_rm32_r32(Emulator emu)
         {
-            emu.register.eip += 1;
+            emu.eip += 1;
             ModRM modrm = new ModRM();
             modrm.Parse(emu);
             UInt32 r32 = modrm.get_r32(emu);
@@ -117,7 +117,7 @@ namespace x86Emulator
         // opcode 0x8B
         private static void mov_r32_rm32(Emulator emu)
         {
-            emu.register.eip += 1;
+            emu.eip += 1;
             ModRM modrm = new ModRM();
             modrm.Parse(emu);
             UInt32 rm32 = modrm.get_rm32(emu);
@@ -129,11 +129,11 @@ namespace x86Emulator
         // opcode 0xB8～0xBF
         private static void mov_rm32_imm32(Emulator emu)
         {
-            emu.register.eip++;
+            emu.eip++;
             ModRM modrm = new ModRM();
             modrm.Parse(emu);
-            UInt32 value = emu.memory.getCode32(emu.register.eip, 0);
-            emu.register.eip += 4;
+            UInt32 value = emu.getCode32(0);
+            emu.eip += 4;
             modrm.set_rm32(emu, value);
         }
 
@@ -142,10 +142,10 @@ namespace x86Emulator
         // opcode 0xC7
         private static void mov_r32_imm32(Emulator emu)
         {
-            Byte reg = (Byte)(emu.memory.getCode8(emu.register.eip, 0) - 0xB8);
-            UInt32 value = emu.memory.getCode32(emu.register.eip, 1);
-            emu.register.registers[reg] = value;
-            emu.register.eip += 5;
+            Byte reg = (Byte)(emu.getCode8(0) - 0xB8);
+            UInt32 value = emu.getCode32(1);
+            emu.registers[reg] = value;
+            emu.eip += 5;
         }
 
 
@@ -153,8 +153,8 @@ namespace x86Emulator
         // opcode 0xE9
         private static void near_jump(Emulator emu)
         {
-            SByte diff = (SByte)emu.memory.getSignedCode8(emu.register.eip, 1);
-            emu.register.eip += (UInt32)(diff + 5);
+            SByte diff = (SByte)emu.getSignedCode8(1);
+            emu.eip += (UInt32)(diff + 5);
         }
 
 
@@ -162,8 +162,8 @@ namespace x86Emulator
         // opcode 0xEB
         private static void short_jump(Emulator emu)
         {
-            SByte diff = (SByte)emu.memory.getSignedCode8(emu.register.eip, 1);
-            emu.register.eip += (UInt32)(diff + 2);
+            SByte diff = (SByte)emu.getSignedCode8(1);
+            emu.eip += (UInt32)(diff + 2);
         }
 
 
@@ -171,7 +171,7 @@ namespace x86Emulator
         // opcode 0xFF
         private static void code_ff(Emulator emu)
         {
-            emu.register.eip += 1;
+            emu.eip += 1;
             ModRM modrm = new ModRM();
             modrm.Parse(emu);
 
