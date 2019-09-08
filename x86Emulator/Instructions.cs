@@ -13,6 +13,11 @@ namespace x86Emulator
             instructions = new Instruction[256];
 
             instructions[0x01] = add_rm32_r32;
+            for (int i = 0; i < 8; i++)
+            {
+                instructions[0x50 + i] = push_r32;
+                instructions[0x58 + i] = pop_r32;
+            }
             instructions[0x83] = code_83;
             instructions[0x89] = mov_rm32_r32;
             instructions[0x8B] = mov_r32_rm32;
@@ -20,11 +25,40 @@ namespace x86Emulator
             {
                 instructions[0xB8 + i] = mov_r32_imm32;
             }
+            instructions[0xC3] = ret;
             instructions[0xC7] = mov_rm32_imm32;
+            instructions[0xE8] = call_rel32;
             instructions[0xE9] = near_jump;
             instructions[0xEB] = short_jump;
             instructions[0xFF] = code_ff;
         }
+
+        static void push_r32(Emulator emu)
+        {
+            Byte reg = (Byte)(emu.memory.getCode8(emu.register.eip, 0) - 0x50);
+            emu.memory.push32(emu, emu.register.getRegister32(reg));
+            emu.register.eip += 1;
+        }
+
+        static void pop_r32(Emulator emu)
+        {
+            Byte reg = (Byte)(emu.memory.getCode8(emu.register.eip, 0) - 0x58);
+            emu.register.setRegister32(reg, emu.memory.pop32(emu));
+            emu.register.eip += 1;
+        }
+
+        static void call_rel32(Emulator emu)
+        {
+            Int32 diff = emu.memory.getSignedCode32(emu.register.eip, 1);
+            emu.memory.push32(emu, emu.register.eip + 5);
+            emu.register.eip += (uint)(diff + 5);
+        }
+
+        static void ret(Emulator emu)
+        {
+            emu.register.eip = emu.memory.pop32(emu);
+        }
+
 
         // opcode 0x01
         private static void add_rm32_r32(Emulator emu)

@@ -3,10 +3,6 @@ using System.IO;
 
 namespace x86Emulator
 {
-    
-
-    
-
     public class Emulator
     {
         const UInt32 MEMORY_SIZE = 1024 * 1024;

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 
+
 namespace x86Emulator
 {
     public class Memory
@@ -85,6 +86,21 @@ namespace x86Emulator
             {
                 ret |= getMemory8((UInt32)(address + i)) << (8 * i);
             }
+            return ret;
+        }
+
+        public void push32(Emulator emu, UInt32 value)
+        {
+            UInt32 address = emu.register.getRegister32((int)Register.Registers.ESP) - 4;
+            emu.register.setRegister32((int)Register.Registers.ESP, address);
+            setMemory32(address, value);
+        }
+
+        public UInt32 pop32(Emulator emu)
+        {
+            UInt32 address = emu.register.getRegister32((int)Register.Registers.ESP);
+            UInt32 ret = getMemory32(address);
+            emu.register.setRegister32((int)Register.Registers.ESP, address + 4);
             return ret;
         }
     }
