@@ -5,7 +5,7 @@ using System.IO;
  * 
  * x86Emulator
  * 自作エミュレータで学ぶx86アーキテクチャ掲載x86エミュレータのC#移植版
- * Chapter3.7
+ * Chapter3.10
  * 
  *********************************************************************** */
 
@@ -25,7 +25,7 @@ namespace x86Emulator
             Emulator emu = new Emulator(1024 * 1024, 0x7c00, 0x7c00);
             
             // バイナリファイルをメモリ展開
-            if (emu.Allocate(args[0], 0) != 0) return;                       
+            if (emu.Allocate(args[0], 0x7c00) != 0) return;                       
 
             while (true)
             {

@@ -8,6 +8,15 @@ namespace x86Emulator
         EAX, ECX, EDX, EBX, ESP, EBP, ESI, EDI
     }
 
+    [Flags]
+    public enum Eflags : UInt32
+    {
+        CARRY = 1,
+        ZERO = 1 << 6,
+        SIGN = 1 << 7,
+        OVERFLOW = 1 << 11,
+    }
+
     public class Emulator
     {
         const UInt32 MEMORY_SIZE = 1024 * 1024;
@@ -18,7 +27,7 @@ namespace x86Emulator
         // 汎用レジスタ
         public UInt32[] registers = new UInt32[Enum.GetNames(typeof(Registers)).Length];
         // EFLAGレジスタ
-        public UInt32 eflags;
+        public Eflags eflags;
         // プログラムカウンタ
         public UInt32 eip;
 
@@ -185,6 +194,74 @@ namespace x86Emulator
             UInt32 ret = getMemory32(address);
             setRegister32((int)Registers.ESP, address + 4);
             return ret;
+        }
+
+        public void update_eflags_sub(UInt32 v1, UInt32 v2, UInt64 result)
+        {
+            /* 各値の符号を取得 */
+            int sign1 = (int)v1 >> 31;
+            int sign2 = (int)v2 >> 31;
+            int signr = (int)(result >> 31) & 0x01;
+
+            /* 演算結果にcarryがあればCarryフラグ設定 */
+            set_carry((int)result >> 32);
+
+            /* 演算結果が0ならばZeroフラグ設定 */
+            set_zero(result == 0 ? 1 : 0);
+
+            /* 演算結果に符合があればSignフラグ設定 */
+            set_sign(signr);
+
+            /* 演算結果がオーバーフローしていたらOverflowフラグ設定 */
+            set_overflow(sign1 != sign2 && sign1 != signr ? 1 : 0);
+        }
+
+        private void set_carry(int is_carry)
+        {
+            if (is_carry == 1)
+            {
+                eflags |= Eflags.CARRY;
+            }
+            else
+            {
+                eflags &= ~Eflags.CARRY;
+            }
+        }
+
+        private void set_zero(int is_zero)
+        {
+            if (is_zero == 1)
+            {
+                eflags |= Eflags.ZERO;
+            }
+            else
+            {
+                eflags &= ~Eflags.ZERO;
+            }
+        }
+
+        private void set_sign(int is_sign)
+        {
+            if (is_sign == 1)
+            {
+                eflags |= Eflags.SIGN;
+            }
+            else
+            {
+                eflags &= ~Eflags.SIGN;
+            }
+        }
+
+        private void set_overflow(int is_overflow)
+        {
+            if (is_overflow == 1)
+            {
+                eflags |= Eflags.OVERFLOW;
+            }
+            else
+            {
+                eflags &= ~Eflags.OVERFLOW;
+            }
         }
     }
 }
